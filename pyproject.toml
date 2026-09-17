@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "plugin2eaf"
-version = "1.0.1"
+version = "1.1.0"
 description = "Convert legacy exteraGram .plugin packages to Elyx .eaf archives"
 requires-python = ">=3.10"
 readme = "README.md"
