@@ -24,6 +24,7 @@ class SourceFile:
 ID_RE = re.compile(r"^[A-Za-z0-9_]{2,32}$")
 TOOL_NAME = "Plugin2EAF"
 TOOL_URL = "https://github.com/seli0n0/plugin2eaf"
+TOOL_VERSION = "1.1.0"
 META_FIELDS = {
     "__id__": "id", "__name__": "name", "__description__": "description",
     "__author__": "author", "__version__": "version", "__icon__": "icon",
@@ -161,7 +162,7 @@ def _classified_paths(files: list[SourceFile], entry: SourceFile) -> dict[PurePo
 
 def _refmap(content: dict[PurePosixPath, bytes], main: str) -> bytes:
     """Declare optional Elyx directories only when the archive contains them."""
-    lines = ["metainfo: plugin/meta.yml", f"main: {main}", 'plugin2eaf: "1.0.1"']
+    lines = ["metainfo: plugin/meta.yml", f"main: {main}", f'plugin2eaf: "{TOOL_VERSION}"']
     paths = tuple(content)
     if any(path.parts[:2] == ("plugin", "res") for path in paths):
         lines.append("assets: plugin/res")
@@ -257,7 +258,9 @@ def validate_archive(archive_path: str | Path) -> dict[str, Any]:
     if not path.is_file() or not zipfile.is_zipfile(path):
         return {"archive": str(path), "valid": False, "errors": ["Not a ZIP-compatible archive"]}
     with zipfile.ZipFile(path) as archive:
-        names = {info.filename.rstrip("/") for info in archive.infolist()}
+        infos = archive.infolist()
+        names = {info.filename.rstrip("/") for info in infos}
+        directories = {info.filename.rstrip("/") for info in infos if info.is_dir()}
         for name in names:
             try:
                 _safe_path(name)
