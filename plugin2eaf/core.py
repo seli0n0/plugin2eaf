@@ -22,6 +22,8 @@ class SourceFile:
 
 
 ID_RE = re.compile(r"^[A-Za-z0-9_]{2,32}$")
+TOOL_NAME = "Plugin2EAF"
+TOOL_URL = "https://github.com/seli0n0/plugin2eaf"
 META_FIELDS = {
     "__id__": "id", "__name__": "name", "__description__": "description",
     "__author__": "author", "__version__": "version", "__icon__": "icon",
@@ -110,6 +112,11 @@ def _metadata(files: list[SourceFile], entry: SourceFile) -> dict[str, Any]:
         metadata["id"] = plugin_id
     metadata.setdefault("name", plugin_id)
     metadata.setdefault("version", "1.0.0")
+    description = metadata.get("description", "")
+    if not isinstance(description, str):
+        description = str(description)
+    if TOOL_NAME not in description:
+        metadata["description"] = (description.rstrip() + "\n\n" if description else "") + f"Converted with [{TOOL_NAME}]({TOOL_URL})"
     requirements = raw.get("__requirements__")
     if isinstance(requirements, (list, tuple)) and all(isinstance(x, str) for x in requirements):
         metadata["requirements"] = ", ".join(requirements)
@@ -154,7 +161,7 @@ def _classified_paths(files: list[SourceFile], entry: SourceFile) -> dict[PurePo
 
 def _refmap(content: dict[PurePosixPath, bytes], main: str) -> bytes:
     """Declare optional Elyx directories only when the archive contains them."""
-    lines = ["metainfo: plugin/meta.yml", f"main: {main}"]
+    lines = ["metainfo: plugin/meta.yml", f"main: {main}", 'plugin2eaf: "1.0.1"']
     paths = tuple(content)
     if any(path.parts[:2] == ("plugin", "res") for path in paths):
         lines.append("assets: plugin/res")
