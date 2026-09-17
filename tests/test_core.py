@@ -32,6 +32,7 @@ class ConverterTests(unittest.TestCase):
                 self.assertIn("refmap.yml", archive.namelist())
                 self.assertIn("plugin/src/main.py", archive.namelist())
                 self.assertIn('id: "hello_world"', archive.read("plugin/meta.yml").decode())
+                self.assertIn("Converted with [Plugin2EAF]", archive.read("plugin/meta.yml").decode())
 
     def test_normalizes_wrapped_zip_and_assets(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
