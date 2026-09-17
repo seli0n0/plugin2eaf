@@ -152,6 +152,19 @@ def _classified_paths(files: list[SourceFile], entry: SourceFile) -> dict[PurePo
     return result
 
 
+def _refmap(content: dict[PurePosixPath, bytes], main: str) -> bytes:
+    """Declare optional Elyx directories only when the archive contains them."""
+    lines = ["metainfo: plugin/meta.yml", f"main: {main}"]
+    paths = tuple(content)
+    if any(path.parts[:2] == ("plugin", "res") for path in paths):
+        lines.append("assets: plugin/res")
+    if any(path.parts[:2] == ("plugin", "locales") for path in paths):
+        lines.append("strings: plugin/locales")
+    if any(path.parts[:1] == ("wheels",) for path in paths):
+        lines.append("wheels: wheels")
+    return ("\n".join(lines) + "\n").encode("utf-8")
+
+
 def inspect_input(input_path: str | Path) -> dict[str, Any]:
     path = Path(input_path)
     files = _read_input(path)
@@ -213,11 +226,11 @@ def convert(input_path: str | Path, output_path: str | Path, *, compile_python: 
     entry = _select_entry(files)
     metadata = _metadata(files, entry)
     content = _classified_paths(files, entry)
-    content[PurePosixPath("refmap.yml")] = b"metainfo: plugin/meta.yml\nmain: plugin/src/main.py\nassets: plugin/res\nstrings: plugin/locales\nwheels: wheels\n"
     content[PurePosixPath("plugin/meta.yml")] = _yaml(metadata)
+    content[PurePosixPath("refmap.yml")] = _refmap(content, "plugin/src/main.py")
     if compile_python:
         content = _compile(content)
-        content[PurePosixPath("refmap.yml")] = b"metainfo: plugin/meta.yml\nmain: plugin/src/main.pyc\nassets: plugin/res\nstrings: plugin/locales\nwheels: wheels\n"
+        content[PurePosixPath("refmap.yml")] = _refmap(content, "plugin/src/main.pyc")
     temporary = output.with_suffix(output.suffix + ".tmp")
     try:
         _write_zip(temporary, content)
